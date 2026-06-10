@@ -1,0 +1,15 @@
+# Logs
+*.log
+
+# Compiled binaries
+*.o
+*.bin
+/dist/
+
+# Dependency directories
+/node_modules
+/vendor
+
+# Build artifacts
+/build/
+/target/
