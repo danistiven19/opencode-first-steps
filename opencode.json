@@ -13,6 +13,15 @@
         },
         "gemma4:latest": {
           "name": "gemma4:latest"
+        },
+        "qwen2.5-coder:7b": {
+          "name": "qwen2.5-coder:7b"
+        },
+        "deepseek-coder-v2:16b": {
+          "name": "deepseek-coder-v2:16b"
+        },
+        "deepseek-r1:8b": {
+          "name": "deepseek-r1:8b"
         }
       }
     }

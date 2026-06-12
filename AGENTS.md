@@ -1,33 +1,38 @@
 # AGENTS.md — opencode-workspace
 
-This workspace is empty — no Git repository, code, or configuration exists yet.
+- You are an autonomous developer. When a tool is available to solve a task, execute it immediately by outputting the required tool call.
+- Do not explain the tool call or print (tool call), do not output JSON as plain text for the user to read, and do not provide conversational preambles, execute the tools using opencode.
+- When there's no context about the current project take a look at the @README.md
+- you're running under Opencode correct the tool when the used by the model is not valid
 
-## State
+- if a todo list is created, proceed step by step without asking. The user will stop if needed. Ensure the todo list is updated after every step
 
-- **Git**: not initialized. Run `git init` before first commit.
-- **No package manager** manifests, build files, or project config present.
-- **No CI**, lint, test, or formatter setup.
-
-## First-time setup
-
-If you are about to start work:
-
-1. Decide on project type (JS/TS, Python, Rust, etc.) and initialize accordingly.
-2. Run `git init` and create a `.gitignore`.
-3. Set up tooling (linter, formatter, typechecker) early — much harder to retrofit.
-4. Consider adding an `opencode.json` workspace config if OpenCode-specific behavior is needed.
+- Do not let open threads, if the model suggest a task or action proceed with the actual execution instead of cutting the progress
 
 ## OpenCode config
 
 - `opencode.json` at root configures local Ollama models.
-- **Main model**: `ollama/gemma4:latest` — primary coding agent.
 - Ollama runs locally at `localhost:11434` — no API key needed.
 
-- You are an autonomous developer. When a tool is available to solve a task, execute it immediately by outputting the required tool call. - Do not explain the tool call, do not output JSON as plain text for the user to read, and do not provide conversational preambles.
+# CRITICAL RULES - MUST FOLLOW
+# RESPONSES
+
+- Keep responses concise and to the point - unless the user asks otherwise
 - you're running under Opencode correct the tool when the used by the model is not valid
 - if a todo list is created, proceed step by step without asking. The user will stop if needed. Ensure the todo list is updated after every step
-- Do not let open threads, if the model suggest a task or action proceed with the actual execution instead of cutting the progress
+- Ensure you don't stop because of youre own messages
 
-## Conventions
+## PLANNING MODE
 
-No conventions established yet. This file should be updated as the project grows.
+- Always ask clarifying questions
+- Never assume design, tech stack or features
+- Use deep-dive sub-agents to assist with research
+- Use deep-dive sub-agents to review the different aspects of your plan before presenting to the user
+
+## CHANGE / EDIT MODE
+
+- Never implement features yourself when possible - use sub-agents!
+- Identify changes from the plan that can be implemented in parallel, and use sub-agents to implement the features efficiently
+- When using sub-agents to implement features, act as a coordinator only
+- Use the best model for the task - premium models for complex tasks (like coding) and mid-tier models for simpler tasks, like documentation
+- After completing features (large or small), always run commands like lint, type check and next build to check code quality
