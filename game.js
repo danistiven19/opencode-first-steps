@@ -1,6 +1,8 @@
 // Global game variables
 let snake = [{ x: 10, y: 10 }];
-let food = { x: 0, y: 0 };
+let foods = []; // Array to hold multiple food positions
+let obstacles = []; // Array to hold obstacle positions
+const MAX_FOOD = 3; // Maximum number of food items at once
 let dx = 1;
 let dy = 0;
 let score = 0;
@@ -17,8 +19,8 @@ function resetState() {
     dx = 1;
     dy = 0;
     score = 0;
-    // Keep the level that the user selected before the game over
-    // level = 1; 
+    foods = []; // Reset foods array
+    obstacles = []; // Reset obstacles array
 }
 
 // Initialization function
@@ -56,8 +58,9 @@ function initGame() {
     // Set up the board (clear existing content)
     gameBoard.innerHTML = '';
 
-    // Place initial food and start game
+    // Place initial food, obstacles and start game
     placeFood();
+    createObstacles();
     drawGame();
     
     // Add a small delay to ensure initial state is stable before starting the loop
@@ -81,8 +84,29 @@ function gameOver() {
     gameInterval = null; // Clear reference
     // Remove all listeners to prevent accidental movement
     document.removeEventListener('keydown', changeDirection);
-    console.log(`Game Over! Final score: ${score}`);
-    // Optional: add a small message on screen instead of an alert
+    
+    // Display visible Game Over message on the board
+    let overMessage = document.createElement('div');
+    overMessage.style.position = 'absolute';
+    overMessage.style.top = '50%';
+    overMessage.style.left = '50%';
+    overMessage.style.transform = 'translate(-50%, -50%)';
+    overMessage.style.padding = '30px';
+    overMessage.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    overMessage.style.color = '#FFD700'; // Gold color for visibility
+    overMessage.style.borderRadius = '10px';
+    overMessage.style.textAlign = 'center';
+    overMessage.style.zIndex = '100';
+    overMessage.innerHTML = `<h2>GAME OVER!</h2><p>Final Score: ${score}</p><button id="restart-button" style="padding: 10px 20px; font-size: 1.2em; margin-top: 15px; cursor: pointer;">Restart Game</button>`;
+    gameBoard.innerHTML = ''; // Clear previous elements first (including any existing food/snake drawing)
+    // Re-draw the background state (needed if I clear innerHTML like this, but let's just place the message over it for now)
+    // Since clearing innerHTML clears everything, we must redraw relevant elements or handle the restart logic differently. 
+    // For simplicity right now, I will append and rely on the subsequent call to initGame/restart handling.
+    gameBoard.appendChild(overMessage);
+
+    document.getElementById('restart-button').addEventListener('click', () => {
+        initGame(); // Restart game flow
+    });
 }
 
 function gameLoop() {
@@ -123,6 +147,21 @@ function moveSnake(ateFood) {
     }
 }
 
+function createObstacles() {
+    obstacles = [];
+    for (let i = 0; i < 5; i++) { // Add 5 obstacles
+        let obstacle;
+        do {
+            obstacle = {
+                x: Math.floor(Math.random() * BOARD_SIZE),
+                y: Math.floor(Math.random() * BOARD_SIZE)
+            };
+        } while (snake.some(segment => segment.x === obstacle.x && segment.y === obstacle.y) ||
+                 foods.some(food => food.x === obstacle.x && food.y === obstacle.y));
+        obstacles.push(obstacle);
+    }
+}
+
 function checkCollision() {
     const head = snake[0];
     // Wall collision
@@ -137,26 +176,36 @@ function checkCollision() {
             return true;
         }
     }
+    // Obstacle collision
+    if (obstacles.some(obstacle => obstacle.x === head.x && obstacle.y === head.y)) {
+        console.log("Collision: Obstacle at", head);
+        return true;
+    }
     return false;
 }
 
 function checkEatFood() {
     const head = snake[0];
-    if (head.x === food.x && head.y === food.y) {
+    const index = foods.findIndex(food => head.x === food.x && head.y === food.y);
+    if (index !== -1) {
+        foods.splice(index, 1); // Remove eaten food
         return true;
     }
     return false;
 }
 
 function placeFood() {
-    let newFood;
-    do {
-        newFood = {
-            x: Math.floor(Math.random() * BOARD_SIZE),
-            y: Math.floor(Math.random() * BOARD_SIZE)
-        };
-    } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
-    food = newFood;
+    while (foods.length < MAX_FOOD) {
+        let newFood;
+        do {
+            newFood = {
+                x: Math.floor(Math.random() * BOARD_SIZE),
+                y: Math.floor(Math.random() * BOARD_SIZE)
+            };
+        } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y) || 
+                 foods.some(food => food.x === newFood.x && food.y === newFood.y));
+        foods.push(newFood);
+    }
 }
 
 
@@ -173,27 +222,39 @@ function drawGame() {
         element.style.width = '100%';
         element.style.height = '100%';
         // Enhanced snake colors with gradient and subtle glow
-        element.style.background = index === 0 
-            ? 'radial-gradient(circle, #FFD54F, #FFB74D)' // Brighter, warmer head with gradient
-            : 'radial-gradient(circle, #FFB74D, #FFA000)'; // Lighter, warmer body with gradient
-        element.style.borderRadius = '50%'; // Make segments round for a smoother look
-        element.style.boxShadow = '0 0 8px rgba(255, 215, 79, 0.7)'; // Golden glow for snake segments
+element.style.background = index === 0 ? '#8BC34A' : '#689F38'; // Green head and body color
+element.style.borderRadius = '0%'; // Remove circular shape for square appearance
+element.style.boxShadow = 'none'; // Remove glow effect
         element.style.boxSizing = 'border-box';
         gameBoard.appendChild(element);
     });
 
-    // Draw Food (Enhanced Triangle)
-    const foodElement = document.createElement('div');
-    foodElement.style.gridRowStart = food.y + 1;
-    foodElement.style.gridColumnStart = food.x + 1;
-    foodElement.style.width = '100%';
-    foodElement.style.height = '100%';
-    // Vibrant blue gradient for the triangle, with a subtle shadow
-    foodElement.style.background = 'linear-gradient(145deg, #2196F3, #1E88E5)';
-    foodElement.style.clipPath = 'polygon(50% 0%, 100% 100%, 0% 100%)'; 
-    foodElement.style.boxSizing = 'border-box';
-    foodElement.style.filter = 'drop-shadow(0 0 10px rgba(33, 150, 243, 0.7))'; // Glow effect on food
-    gameBoard.appendChild(foodElement);
+    // Draw Obstacles
+    obstacles.forEach(obstacle => {
+        const obstacleElement = document.createElement('div');
+        obstacleElement.style.gridRowStart = obstacle.y + 1;
+        obstacleElement.style.gridColumnStart = obstacle.x + 1;
+        obstacleElement.style.width = '100%';
+        obstacleElement.style.height = '100%';
+        obstacleElement.style.backgroundColor = '#f44336'; // Red for obstacles
+        obstacleElement.style.borderRadius = '5px'; // Square-ish
+        gameBoard.appendChild(obstacleElement);
+    });
+
+    // Draw Foods (Enhanced Triangle)
+    foods.forEach(food => {
+        const foodElement = document.createElement('div');
+        foodElement.style.gridRowStart = food.y + 1;
+        foodElement.style.gridColumnStart = food.x + 1;
+        foodElement.style.width = '100%';
+        foodElement.style.height = '100%';
+        // Vibrant blue gradient for the triangle, with a subtle shadow
+        foodElement.style.background = 'linear-gradient(145deg, #2196F3, #1E88E5)';
+        foodElement.style.clipPath = 'polygon(50% 0%, 100% 100%, 0% 100%)'; 
+        foodElement.style.boxSizing = 'border-box';
+        foodElement.style.filter = 'drop-shadow(0 0 10px rgba(33, 150, 243, 0.7))'; // Glow effect on food
+        gameBoard.appendChild(foodElement);
+    });
 }
 
 
